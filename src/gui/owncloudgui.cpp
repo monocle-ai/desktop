@@ -32,6 +32,7 @@
 #include "cloudproviders/cloudprovidermanager.h"
 #endif
 
+
 #include <QDesktopServices>
 #include <QDir>
 #include <QMessageBox>
@@ -50,6 +51,12 @@
 #include <QQmlApplicationEngine>
 #include <QQuickItem>
 #include <QQmlContext>
+
+#include <QFileDialog>
+
+#if defined(Q_OS_WIN)
+	#include "vfs_windows.h"
+#endif
 
 namespace OCC {
 
@@ -500,6 +507,23 @@ void ownCloudGui::slotLogout()
     foreach (const auto &ai, list) {
         ai->signOutByUi();
     }
+
+    /*
+    * JP 09/2018.
+    * Down Virtual File System.
+    */
+    #if defined(Q_OS_WIN)
+	Vfs_windows *_Vfs_windows = NULL;
+	_Vfs_windows = Vfs_windows::instance();
+	if (_Vfs_windows)
+	{
+		qDebug() << "\n dbg_sync " << Q_FUNC_INFO << "up Drive:  " << _Vfs_windows;
+		WCHAR DriveLetter = L'X';
+		_Vfs_windows->downDrive(DriveLetter);
+	}
+	else
+		qDebug() << "\n dbg_sync " << Q_FUNC_INFO << " BAD up Drive";
+     #endif
 }
 
 void ownCloudGui::slotUnpauseAllFolders()
