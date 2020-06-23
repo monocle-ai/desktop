@@ -21,7 +21,6 @@
 #include "tray/UserModel.h"
 
 class QScreen;
-class QQmlApplicationEngine;
 
 namespace OCC {
 
@@ -76,9 +75,6 @@ signals:
     Q_INVOKABLE void showWindow();
     Q_INVOKABLE void openShareDialog(const QString &sharePath, const QString &localPath);
 
-public slots:
-    void slotNewUserSelected();
-
 private:
     static Systray *_instance;
     Systray();
@@ -89,7 +85,6 @@ private:
 
     bool _isOpen = false;
     bool _syncIsPaused = false;
-    QQmlApplicationEngine *_trayEngine;
 };
 
 } // namespace OCC

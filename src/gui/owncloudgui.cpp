@@ -63,10 +63,19 @@ ownCloudGui::ownCloudGui(Application *parent)
 #ifdef WITH_LIBCLOUDPROVIDERS
     , _bus(QDBusConnection::sessionBus())
 #endif
+    , _trayEngine(new QQmlApplicationEngine(this))
     , _app(parent)
 {
+    _trayEngine->addImportPath("qrc:/qml/theme");
+    _trayEngine->addImageProvider("avatars", new ImageProvider);
+
+    qmlRegisterSingletonType<Systray>("com.nextcloud.desktopclient", 1, 0, "Systray",
+        [](QQmlEngine *, QJSEngine *) -> QObject * {
+            return Systray::instance();
+        }
+    );
+
     _tray = Systray::instance();
-    _tray->setParent(this);
     // for the beginning, set the offline icon until the account was verified
     _tray->setIcon(Theme::instance()->folderOfflineIcon(/*systray?*/ true));
 
@@ -95,6 +104,9 @@ ownCloudGui::ownCloudGui(Application *parent)
                 slotShowShareDialog(sharePath, localPath, ShareDialogStartPage::UsersAndGroups);
             });
 
+    connect(UserModel::instance(), &UserModel::newUserSelected,
+        this, &ownCloudGui::slotNewUserSelected);
+
     ProgressDispatcher *pd = ProgressDispatcher::instance();
     connect(pd, &ProgressDispatcher::progressInfo, this,
         &ownCloudGui::slotUpdateProgress);
@@ -113,6 +125,11 @@ ownCloudGui::ownCloudGui(Application *parent)
 
 void ownCloudGui::createTray()
 {
+    if (!AccountManager::instance()->accounts().isEmpty()) {
+        _trayEngine->rootContext()->setContextProperty("activityModel", UserModel::instance()->currentActivityModel());
+    }
+    _trayEngine->load(QStringLiteral("qrc:/qml/src/gui/tray/Window.qml"));
+
     _tray->create();
 }
 
@@ -701,5 +718,13 @@ void ownCloudGui::slotRemoveDestroyedShareDialogs()
     }
 }
 
+void ownCloudGui::slotNewUserSelected()
+{
+    // Change ActivityModel
+    _trayEngine->rootContext()->setContextProperty("activityModel", UserModel::instance()->currentActivityModel());
+
+    // Rebuild App list
+    UserAppsModel::instance()->buildAppList();
+}
 
 } // end namespace

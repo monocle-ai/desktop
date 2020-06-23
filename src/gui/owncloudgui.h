@@ -29,6 +29,8 @@
 #include <QDBusConnection>
 #endif
 
+class QQmlApplicationEngine;
+
 namespace OCC {
 
 class Folder;
@@ -92,7 +94,7 @@ public slots:
     void slotOpenPath(const QString &path);
     void slotAccountStateChanged();
     void slotTrayMessageIfServerUnsupported(Account *account);
-
+    void slotNewUserSelected();
 
     /**
      * Open a share dialog for a file or folder.
@@ -129,7 +131,7 @@ private:
     QAction *_actionSettings;
     QAction *_actionEstimate;
 
-
+    QQmlApplicationEngine *_trayEngine;
     QList<QAction *> _recentItemsActions;
     Application *_app;
 };

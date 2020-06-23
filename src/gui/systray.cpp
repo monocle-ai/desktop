@@ -51,11 +51,7 @@ Systray *Systray::instance()
 
 Systray::Systray()
     : QSystemTrayIcon(nullptr)
-    , _trayEngine(new QQmlApplicationEngine(this))
 {
-    _trayEngine->addImportPath("qrc:/qml/theme");
-    _trayEngine->addImageProvider("avatars", new ImageProvider);
-
     qmlRegisterSingletonType<UserModel>("com.nextcloud.desktopclient", 1, 0, "UserModel",
         [](QQmlEngine *, QJSEngine *) -> QObject * {
             return UserModel::instance();
@@ -68,36 +64,14 @@ Systray::Systray()
         }
     );
 
-    qmlRegisterSingletonType<Systray>("com.nextcloud.desktopclient", 1, 0, "Systray",
-        [](QQmlEngine *, QJSEngine *) -> QObject * {
-            return Systray::instance();
-        }
-    );
-
-    connect(UserModel::instance(), &UserModel::newUserSelected,
-        this, &Systray::slotNewUserSelected);
-
     connect(AccountManager::instance(), &AccountManager::accountAdded,
         this, &Systray::showWindow);
 }
 
 void Systray::create()
 {
-    if (!AccountManager::instance()->accounts().isEmpty()) {
-        _trayEngine->rootContext()->setContextProperty("activityModel", UserModel::instance()->currentActivityModel());
-    }
-    _trayEngine->load(QStringLiteral("qrc:/qml/src/gui/tray/Window.qml"));
     hideWindow();
     emit activated(QSystemTrayIcon::ActivationReason::Unknown);
-}
-
-void Systray::slotNewUserSelected()
-{
-    // Change ActivityModel
-    _trayEngine->rootContext()->setContextProperty("activityModel", UserModel::instance()->currentActivityModel());
-
-    // Rebuild App list
-    UserAppsModel::instance()->buildAppList();
 }
 
 bool Systray::isOpen()
